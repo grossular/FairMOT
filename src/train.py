@@ -43,9 +43,6 @@ def main(opt):
     model = create_model(opt.arch, opt.heads, opt.head_conv)
     optimizer = torch.optim.Adam(model.parameters(), opt.lr)
     start_epoch = 0
-    if opt.load_model != '':
-        model, optimizer, start_epoch = load_model(
-            model, opt.load_model, optimizer, opt.resume, opt.lr, opt.lr_step)
 
     # Get dataloader
 
@@ -62,7 +59,11 @@ def main(opt):
     Trainer = train_factory[opt.task]
     trainer = Trainer(opt, model, optimizer)
     trainer.set_device(opt.gpus, opt.chunk_sizes, opt.device)
-    best = 1e10
+
+    if opt.load_model != '':
+        model, optimizer, start_epoch = load_model(
+            model, opt.load_model, trainer.optimizer, opt.resume, opt.lr, opt.lr_step)
+
     for epoch in range(start_epoch + 1, opt.num_epochs + 1):
         mark = epoch if opt.save_all else 'last'
         log_dict_train, _ = trainer.train(epoch, train_loader)
@@ -85,7 +86,7 @@ def main(opt):
             print('Drop LR to', lr)
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
-        if epoch % 5 == 0:
+        if epoch % 5 == 0 or epoch >= 25:
             save_model(os.path.join(opt.save_dir, 'model_{}.pth'.format(epoch)),
                        epoch, model, optimizer)
     logger.close()
