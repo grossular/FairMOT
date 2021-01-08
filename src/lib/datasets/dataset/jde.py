@@ -89,6 +89,10 @@ class LoadVideo:  # for inference
         self.vw = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.vh = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.vn = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        # If no frame count in header cv2 uses: get_duration_sec() * get_fps() + 0.5 to calculate frame count
+        # Trim some frames here to prevent trying to read frames that don't exist
+        # Might be better to raise StopIteration instead of assert on line 120
+        self.vn = self.vn - 10
 
         self.width = img_size[0]
         self.height = img_size[1]
@@ -112,6 +116,8 @@ class LoadVideo:  # for inference
             raise StopIteration
         # Read image
         res, img0 = self.cap.read()  # BGR
+        if img0 is None:
+            raise StopIteration
         assert img0 is not None, 'Failed to load frame {:d}'.format(self.count)
         img0 = cv2.resize(img0, (self.w, self.h))
 

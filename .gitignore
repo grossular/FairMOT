@@ -1,1 +1,9 @@
 .idea
+*.mp4
+*.jpg
+*.txt
+*.pth
+*.vscode
+*__pycache__
+*DCNv2_new
+*screenlog*
